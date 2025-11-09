@@ -46,7 +46,7 @@
       "exp_no": 8,
       "exp_name": "Interfacing LCD with Raspberry Pi to Display Temperature and Humidity",
       "code": "import Adafruit_DHT\nimport I2C_LCD_driver\nimport time\nDHT_SENSOR = Adafruit_DHT.DHT11\nDHT_PIN = 4\nlcd = I2C_LCD_driver.lcd()\ntry:\n while True:\n humidity, temperature = Adafruit_DHT.read_retry(DHT_SENSOR, DHT_PIN)\n if humidity is not None and temperature is not None:\n lcd.lcd_display_string(f\"Temp: {temperature:.1f}C\", 1)\n lcd.lcd_display_string(f\"Humidity: {humidity:.1f}%\", 2)\n else:\n lcd.lcd_display_string(\"Sensor Error\", 1)\n time.sleep(2)\nexcept KeyboardInterrupt:\n lcd.lcd_clear()\n print(\"Program stopped.\")",
-      "tinkerLink": "null"
+      "tinkerLink": "https://www.tinkercad.com/things/8z5QbtTTD1c-dht-with-temp-sensor-arduino-instead-of-raspberry/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=P6FpV7UVFEs9faQHhGs8OcGFW-zjbkZ4LSgHt4z1VvI"
     },
     {
       "exp_no": 9,
@@ -58,7 +58,7 @@
       "exp_no": 10,
       "exp_name": "Case study: Digital Range Finder using Arduino",
       "code": "#include <LiquidCrystal.h>\nint seconds = 0;\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\nint triggerPin = 7;\nint echoPin = 6;\nlong duration;\nint distance;\nvoid setup()\n{\n lcd.begin(16, 2);\n lcd.print(\"Sensor Reading\");\n\n pinMode(triggerPin, OUTPUT);\n pinMode(echoPin, INPUT);\n}\nvoid loop()\n{\n digitalWrite(triggerPin, LOW);\n delayMicroseconds(2);\n digitalWrite(triggerPin, HIGH);\n delayMicroseconds(10);\n digitalWrite(triggerPin, LOW);\n\n duration = pulseIn(echoPin, HIGH);\n\n distance = duration * 0.0342 / 2;\n\n lcd.setCursor(0, 1);\n lcd.print(\"Distance: \");\n lcd.print(distance);\n lcd.print(\" cm \");\n\n delay(200);\n}",
-      "tinkerLink": "null"
+      "tinkerLink": "https://www.tinkercad.com/things/jOf4U19n3PI-ultrasonic-range-finder/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=-jcWIHliWkkDw6nnXJnSeRJDgHlF9fT7B0S_XmVcsFM"
     }
   ]
 }
