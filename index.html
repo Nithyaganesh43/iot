@@ -1,16 +1,273 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Display iot.pdf</title>
-<style>html,body{height:100%;margin:0}#pdf{width:100%;height:100vh;border:0}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ES-IoT Experiment List</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            /* Added padding to ensure content doesn't touch the screen edges */
+            padding: 20px;
+            background-color: #121212;
+            color: #b0b0b0;
+            /* Slightly duller main text color */
+        }
+
+        h1 {
+            text-align: center;
+            color: #b0b0b0;
+            padding: 0 0 20px 0;
+            /* Adjusted vertical padding */
+            margin: 0;
+        }
+
+        #experiment-list {
+            /* Now full width by default. Added vertical margin for spacing. */
+            margin: 20px 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .experiment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #282828;
+            /* Dimmer border */
+        }
+
+        .experiment-item:last-child {
+            border-bottom: none;
+        }
+
+        .experiment-name {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #b0b0b0;
+        }
+
+        .copy-btn,
+        .pdf-btn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #e0e0e0;
+            border: 1px solid #2f3e49;
+            /* Subtle border for depth */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 10px;
+            /* Added margin for spacing */
+        }
+
+        .copy-btn {
+            /* Muted Slate Blue */
+            background-color: #3d4d5a;
+        }
+
+        .pdf-btn {
+            /* New style for the PDF button (Muted Teal/Green) */
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #435b43;
+            border: 1px solid #324432;
+            margin-top: 20px;
+            /* More spacing above */
+        }
+
+        .copy-btn:hover {
+            /* Slightly lighter for subtle hover effect */
+            background-color: #4d5d6a;
+        }
+
+        .pdf-btn:hover {
+            /* Slightly lighter for subtle hover effect */
+            background-color: #536b53;
+        }
+
+        .copy-btn:active,
+        .pdf-btn:active {
+            transform: scale(0.98);
+        }
+
+        #status-message {
+            text-align: center;
+            /* Default error color is now a dull red */
+            color: #9d3e3e;
+            font-weight: bold;
+            padding: 20px;
+            min-height: 20px;
+        }
+    </style>
 </head>
+
 <body>
-<!-- Place iot.pdf in the same folder as this HTML file -->
-<object id="pdf" data="iot.pdf" type="application/pdf">
-  <embed src="iot.pdf" type="application/pdf" />
-  <p>Your browser does not support displaying PDFs inline. <a href="iot.pdf" download>Download iot.pdf</a>.</p>
-</object>
+    <h1>ES-IoT Experiment List</h1>
+
+    <div id="experiment-list">
+    </div>
+
+    <div id="status-message"></div>
+
+    <button id="open-pdf-btn" class="pdf-btn" onclick="openPdf()">Open Experiment PDF</button>
+
+    <script>
+        // Store experiment data globally
+        let experimentData = [];
+
+        // This function runs when the page finishes loading
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fetch the local JSON file
+            fetch('content.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok. Make sure content.json is in the same folder.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data || !data.esiot) {
+                        throw new Error('JSON format is incorrect. Expected an "esiot" key.');
+                    }
+
+                    // Save the data for later use by the copy buttons
+                    experimentData = data.esiot;
+
+                    // Get the container element
+                    const listContainer = document.getElementById('experiment-list');
+                    listContainer.innerHTML = ''; // Clear any loading text
+
+                    // Loop through each experiment and create HTML for it
+                    experimentData.forEach((exp, index) => {
+                        // 1. Create the main container div for the row
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'experiment-item';
+
+                        // 2. Create the span for the experiment name
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'experiment-name';
+                        // Use (index + 1) for 1-based numbering
+                        nameSpan.textContent = `${index + 1}. ${exp.exp_name}`;
+
+                        // 3. Create the copy button
+                        const codeButton = document.createElement('button');
+                        codeButton.className = 'copy-btn';
+                        codeButton.textContent = 'Copy Code';
+
+                        // Add click event to the button. It calls copyCode() with the current index.
+                        codeButton.onclick = () => copyCode(index);
+
+                        // 4. Add the name and button to the row container
+                        itemDiv.appendChild(nameSpan);
+                        itemDiv.appendChild(codeButton);
+
+                        // 5. Add the completed row to the main list
+                        listContainer.appendChild(itemDiv);
+                    });
+
+                })
+                .catch(error => {
+                    // Display any errors with the muted error color defined in CSS
+                    const statusDiv = document.getElementById('status-message');
+                    statusDiv.textContent = `Error: ${error.message}`;
+                    statusDiv.style.color = '#9d3e3e';
+                });
+        });
+
+        /**
+         * Function to navigate to the PDF file.
+         */
+        function openPdf() {
+            // Opens /iot.pdf in the current tab
+            window.location.href = '/iot.pdf';
+        }
+
+        /**
+         * Copies the code content of a specific experiment to the user's clipboard.
+         * @param {number} index - The index of the experiment in the experimentData array.
+         */
+        function copyCode(index) {
+            const experiment = experimentData[index];
+            // Ensure the code content is treated as a clean string before copying
+            const codeContent = experiment.code.trim();
+            const statusDiv = document.getElementById('status-message');
+
+            // Muted, dull gold color for success feedback
+            const MUTED_SUCCESS_COLOR = '#a8a25c';
+            // Duller, less saturated red for fallback warning
+            const MUTED_WARNING_COLOR = '#9d3e3e';
+
+            // Function to display status message with dim colors
+            const showStatus = (message, color = MUTED_SUCCESS_COLOR) => {
+                statusDiv.textContent = message;
+                statusDiv.style.color = color;
+                // Clear the message after 3 seconds
+                setTimeout(() => statusDiv.textContent = '', 3000);
+            };
+
+            // Use the modern Clipboard API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(codeContent)
+                    .then(() => {
+                        showStatus(`Code for ${experiment.exp_name} copied.`, MUTED_SUCCESS_COLOR);
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                        showStatus('Copy failed. Trying fallback method.', MUTED_WARNING_COLOR);
+                        // Attempt fallback if modern API fails
+                        fallbackCopyTextToClipboard(codeContent, experiment.exp_name, MUTED_SUCCESS_COLOR, MUTED_WARNING_COLOR);
+                    });
+            } else {
+                // Fallback for older browsers or non-secure contexts
+                fallbackCopyTextToClipboard(codeContent, experiment.exp_name, MUTED_SUCCESS_COLOR, MUTED_WARNING_COLOR);
+            }
+        }
+
+        /**
+         * Fallback copy method using a temporary textarea and execCommand.
+         */
+        function fallbackCopyTextToClipboard(text, expName, successColor, warningColor) {
+            const statusDiv = document.getElementById('status-message');
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            // Prevent scrolling to the bottom of the page
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0'; // Hide the textarea
+            document.body.appendChild(textarea);
+
+            // Select the text
+            textarea.select();
+
+            try {
+                // Execute the copy command
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    statusDiv.textContent = `Code for ${expName} copied.`;
+                    statusDiv.style.color = successColor;
+                    setTimeout(() => statusDiv.textContent = '', 3000);
+                } else {
+                    statusDiv.textContent = 'Failed to copy text. Please select and copy manually.';
+                    statusDiv.style.color = warningColor;
+                }
+            } catch (err) {
+                statusDiv.textContent = 'Error during copy. Manual copying required.';
+                statusDiv.style.color = warningColor;
+            }
+
+            // Clean up the temporary element
+            document.body.removeChild(textarea);
+        }
+    </script>
+
 </body>
+
 </html>
